@@ -5,6 +5,8 @@
 #include <iterator>
 #include <tuple>
 #include <algorithm>
+#include <memory>
+#include <utility>
 
 #include "graphedge.h"
 #include "graphnode.h"
@@ -18,7 +20,7 @@ ChatLogic::ChatLogic()
     ////
 
     // create instance of chatbot
-    _chatBot = new ChatBot("../images/chatbot.png");
+    _chatBot = std::make_unique<ChatBot>("../images/chatbot.png");
 
     // add pointer to chatlogic so that chatbot answers can be passed on to the GUI
     _chatBot->SetChatLogicHandle(this);
@@ -31,9 +33,6 @@ ChatLogic::~ChatLogic()
 {
     //// STUDENT CODE
     ////
-
-    // delete chatbot instance
-    delete _chatBot;
 
     // delete all nodes
     for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
@@ -91,7 +90,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                 int posTokenFront = lineStr.find("<");
                 int posTokenBack = lineStr.find(">");
                 if (posTokenFront < 0 || posTokenBack < 0)
-                    break; // quit loop if no complete token has been found
+                    break;  // quit loop if no complete token has been found
                 std::string tokenStr = lineStr.substr(posTokenFront + 1, posTokenBack - 1);
 
                 // extract token type and info
@@ -182,11 +181,11 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                     std::cout << "Error: ID missing. Line is ignored!" << std::endl;
                 }
             }
-        } // eof loop over all lines in the file
+        }  // eof loop over all lines in the file
 
         file.close();
 
-    } // eof check for file availability
+    }  // eof check for file availability
     else
     {
         std::cout << "File could not be opened!" << std::endl;
@@ -217,7 +216,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
 
     // add chatbot to graph root node
     _chatBot->SetRootNode(rootNode);
-    rootNode->MoveChatbotHere(_chatBot);
+    rootNode->MoveChatbotHere(std::move(_chatBot));
     
     ////
     //// EOF STUDENT CODE
@@ -228,9 +227,9 @@ void ChatLogic::SetPanelDialogHandle(ChatBotPanelDialog *panelDialog)
     _panelDialog = panelDialog;
 }
 
-void ChatLogic::SetChatbotHandle(ChatBot *chatbot)
+void ChatLogic::SetChatbotHandle(std::unique_ptr<ChatBot> chatbot)
 {
-    _chatBot = chatbot;
+    _chatBot = std::move(chatbot);
 }
 
 void ChatLogic::SendMessageToChatbot(std::string message)
